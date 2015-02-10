@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo "Echoing hotplug"
+echo /bin/mdev > /proc/sys/kernel/hotplug
+
+echo "mdev -s"
+/sbin/mdev -s

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo "mounting /proc"
+mount -t proc none /proc
+
+echo "mounting /sys"
+mount -t sysfs none /sys
+
+echo "Mounting /dev"
+mount -t tmpfs mdev /dev
+
+echo "Creating /dev/pts"
+mkdir -p /dev/pts
+
+echo "Mounting pts"
+mount -t devpts devpts /dev/pts
