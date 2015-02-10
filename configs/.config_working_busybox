@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Busybox version: 1.23.1
-# Tue Feb 10 16:55:18 2015
+# Tue Feb 10 17:19:19 2015
 #
 CONFIG_HAVE_DOT_CONFIG=y
 
@@ -84,10 +84,10 @@ CONFIG_NO_DEBUG_LIB=y
 #
 # Installation Options ("make install" behavior)
 #
-# CONFIG_INSTALL_APPLET_SYMLINKS is not set
+CONFIG_INSTALL_APPLET_SYMLINKS=y
 # CONFIG_INSTALL_APPLET_HARDLINKS is not set
 # CONFIG_INSTALL_APPLET_SCRIPT_WRAPPERS is not set
-CONFIG_INSTALL_APPLET_DONT=y
+# CONFIG_INSTALL_APPLET_DONT is not set
 # CONFIG_INSTALL_SH_APPLET_SYMLINK is not set
 # CONFIG_INSTALL_SH_APPLET_HARDLINK is not set
 # CONFIG_INSTALL_SH_APPLET_SCRIPT_WRAPPER is not set
