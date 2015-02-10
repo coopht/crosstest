@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -x
+set -x
 
 TARGET_ARCH=arm
 TARGET=arm_v7a-linux-gnueabi
@@ -14,6 +14,7 @@ JOBS=-j4
 
 SRC_QEMU=$SRC/qemu
 SRC_LINUX=$SRC/linux-stable
+SRC_BUSYBOX=$SRC/busybox-1.23.1
 
 QEMU_TARGETS='aarch64-softmmu,arm-softmmu,aarch64-linux-user,arm-linux-user'
 
@@ -32,22 +33,22 @@ initialize()
 {
     LOG_INIT=$LOGS/init
     if [ -d $BUILD ] ; then
-	rm -rfv $BUILD > $LOG_INIT 2&>1
+	rm -rfv $BUILD > $LOG_INIT 2>&1
     fi
 
     mkdir -pv $LOGS
-    mkdir -pv $INSTALL > $LOG_INIT 2&>1
+    mkdir -pv $INSTALL > $LOG_INIT 2>&1
 }
 
 build_qemu()
 {
     BUILD_QEMU=$BUILD/`basename $SRC_QEMU`
     LOG_QEMU=$LOGS/`basename $SRC_QEMU`
-    mkdir -pv $BUILD_QEMU > $LOG_INIT 2&>1
+    mkdir -pv $BUILD_QEMU > $LOG_INIT 2>&1
     cd $BUILD_QEMU
-    $SRC_QEMU/configure --prefix=$INSTALL --target-list=$QEMU_TARGETS >> $LOG_QEMU 2&>1
-    make $JOBS >> $LOG_QEMU 2&>1
-    make $JOBS install >> $LOG_QEMU 2&>1
+    $SRC_QEMU/configure --prefix=$INSTALL --target-list=$QEMU_TARGETS >> $LOG_QEMU 2>&1
+    make $JOBS >> $LOG_QEMU 2>&1
+    make $JOBS install >> $LOG_QEMU 2>&1
     cd $TOP
 }
 
@@ -64,14 +65,35 @@ build_linux()
 
     cd $BUILD_LINUX
     cp -v $CONFIGS/.config_working_linux .config >> $LOG_LINUX 2>&1
-    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j8 &>> $LOG_LINUX
+    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j8 >> $LOG_LINUX 2>&1
 
     mkdir -pv $INSTALL/linux >> $LOG_LINUX 2>&1
     cp -v ./arch/arm/boot/zImage $INSTALL/linux/ >> $LOG_LINUX 2>&1
     cp -v ./arch/arm/boot/dts/vexpress-v2p-ca15_a7.dtb $INSTALL/linux/ >> $LOG_LINUX 2>&1
+    cd $TOP
+}
 
+build_busybox()
+{
+    BUILD_BUSYBOX=$BUILD/`basename $SRC_BUSYBOX`
+    LOG_BUSYBOX=$LOGS/`basename $SRC_BUSYBOX`
+
+    if [ -d $BUILD_BUSYBOX ]; then
+	rm -rfv $BUILD_BUSYBOX > $LOG_BUSYBOX 2>&1
+    fi
+
+    cp -prv $SRC_BUSYBOX $BUILD/ > $LOG_BUSYBOX 2>&1
+
+    cd $BUILD_BUSYBOX
+
+    cp -v $CONFIGS/.config_working_busybox .config >> $LOG_BUSYBOX 2>&1
+
+    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make oldconfig >> $LOG_BUSYBOX 2>&1
+    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j4 install >> $LOG_BUSYBOX 2>&1
+    cd $TOP
 }
 
 initialize
 build_qemu
 build_linux
+build_busybox
