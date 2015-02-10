@@ -105,6 +105,8 @@ prepare_rootfs()
     fi
 
     cp -prv $CONFIGS/rootfs.template $ROOTFS > $LOG_ROOTFS 2>&1
+    mkdir -pv $ROOTFS/{proc,srv,sys,dev,var} >> $LOG_ROOTFS 2>&1
+    install -dv -m 1777 $ROOTFS/tmp $ROOTFS/var/tmp >> $LOG_ROOTFS 2>&1
 }
 
 initialize
