@@ -32,22 +32,22 @@ initialize()
 {
     LOG_INIT=$LOGS/init
     if [ -d $BUILD ] ; then
-	rm -rfv $BUILD &> $LOG_INIT
+	rm -rfv $BUILD > $LOG_INIT 2&>1
     fi
 
     mkdir -pv $LOGS
-    mkdir -pv $INSTALL &> $LOG_INIT
+    mkdir -pv $INSTALL > $LOG_INIT 2&>1
 }
 
 build_qemu()
 {
     BUILD_QEMU=$BUILD/`basename $SRC_QEMU`
     LOG_QEMU=$LOGS/`basename $SRC_QEMU`
-    mkdir -pv $BUILD_QEMU &> $LOG_INIT
+    mkdir -pv $BUILD_QEMU > $LOG_INIT 2&>1
     cd $BUILD_QEMU
-    $SRC_QEMU/configure --prefix=$INSTALL --target-list=$QEMU_TARGETS &> $LOG_QEMU
-    make $JOBS &> $LOG_QEMU
-    make $JOBS install &> $LOG_QEMU
+    $SRC_QEMU/configure --prefix=$INSTALL --target-list=$QEMU_TARGETS >> $LOG_QEMU 2&>1
+    make $JOBS >> $LOG_QEMU 2&>1
+    make $JOBS install >> $LOG_QEMU 2&>1
     cd $TOP
 }
 
