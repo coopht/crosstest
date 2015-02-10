@@ -1,0 +1,1 @@
+./crosstest/bin/qemu-system-arm -smp cpus=4 -M vexpress-a15 -cpu cortex-a15 -m 512 -kernel ./build/linux-stable/arch/arm/boot/zImage -dtb ./build/linux-stable/arch/arm/boot/dts/vexpress-v2p-ca15_a7.dtb -serial stdio
