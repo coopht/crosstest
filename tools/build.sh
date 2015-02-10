@@ -10,6 +10,7 @@ SRC=$TOP/src
 BUILD=$TOP/build
 LOGS=$BUILD/logs
 INSTALL=$TOP/crosstest
+ROOTFS=$INSTALL/rootfs
 JOBS=-j4
 
 SRC_QEMU=$SRC/qemu
@@ -18,7 +19,7 @@ SRC_BUSYBOX=$SRC/busybox-1.23.1
 
 QEMU_TARGETS='aarch64-softmmu,arm-softmmu,aarch64-linux-user,arm-linux-user'
 
-TOOLCHAIN=
+TOOLCHAIN=${TOOLCHAIN}
 
 CROSS_CC=${TOOLCHAIN}gcc
 CROSS_CXX=${TOOLCHAIN}g++
@@ -90,10 +91,24 @@ build_busybox()
 
     ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make oldconfig >> $LOG_BUSYBOX 2>&1
     ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j4 install >> $LOG_BUSYBOX 2>&1
+
+    cp -prv _install/* $ROOTFS/
+
     cd $TOP
+}
+
+prepare_rootfs()
+{
+    LOG_ROOTFS=$LOGS/rootfs
+    if [ -d $ROOTFS ]; then
+	rm -rfv $ROOTFS > $LOG_ROOTFS 2>&1
+    fi
+
+    cp -prv $CONFIGS/rootfs.template $ROOTFS > $LOG_ROOTFS 2>&1
 }
 
 initialize
 build_qemu
 build_linux
+prepare_rootfs
 build_busybox
