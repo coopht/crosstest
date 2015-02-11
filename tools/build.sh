@@ -3,7 +3,7 @@
 set -x
 
 TARGET_ARCH=arm
-TARGET=arm_v7a-linux-gnueabi
+TARGET=arm-v7a-linux-gnueabi
 TOP=`pwd`
 
 SRC=$TOP/src
@@ -16,6 +16,9 @@ JOBS=-j4
 SRC_QEMU=$SRC/qemu
 SRC_LINUX=$SRC/linux-stable
 SRC_BUSYBOX=$SRC/busybox-1.23.1
+SRC_BASH=$SRC/bash-4.3.30
+SRC_OPENSSL=$SRC/openssl-1.0.2
+SRC_OPENSSH=$SRC/openssh-6.7p1
 
 QEMU_TARGETS='aarch64-softmmu,arm-softmmu,aarch64-linux-user,arm-linux-user'
 
@@ -109,8 +112,67 @@ prepare_rootfs()
     install -dv -m 1777 $ROOTFS/tmp $ROOTFS/var/tmp >> $LOG_ROOTFS 2>&1
 }
 
+build_bash()
+{
+    BUILD_BASH=$BUILD/`basename $SRC_BASH`
+    LOG_BASH=$LOGS/`basename $SRC_BASH`
+    if [ -d $BUILD_BASH ]; then
+	rm -rfv $BUILD_BASH > $LOG_BASH 2>&1
+    fi
+
+    mkdir -pv $BUILD_BASH > $LOG_BASH 2>&1
+
+    cd $BUILD_BASH
+    CC=$CROSS_CC \
+    $SRC_BASH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_BASH 2>&1
+    make -j4 >> $LOG_BASH 2>&1
+    make install >> $LOG_BASH 2>&1
+    cd $TOP
+}
+
+build_openssl()
+{
+    BUILD_OPENSSL=$BUILD/`basename $SRC_OPENSSL`
+    LOG_OPENSSL=$LOGS/`basename $SRC_OPENSSL`
+    if [ -d $BUILD_OPENSSL ]; then
+	rm -rfv $BUILD_OPENSSL > $LOG_OPENSSL 2>&1
+    fi
+
+    cp -prv $SRC_OPENSSL $BUILD/ > $LOG_OPENSSL 2>&1
+
+    cd $BUILD_OPENSSL
+    CC=$CROSS_CC \
+    RANLIB=$CROSS_RANLIB \
+    $SRC_OPENSSL/Configure linux-armv4 --prefix=$ROOTFS  >> $LOG_OPENSSL 2>&1
+    make -j4 >> $LOG_OPENSSL 2>&1
+    make install >> $LOG_OPENSSL 2>&1
+    cd $TOP
+}
+
+build_openssh()
+{
+    BUILD_OPENSSH=$BUILD/`basename $SRC_OPENSSH`
+    LOG_OPENSSH=$LOGS/`basename $SRC_OPENSSH`
+    if [ -d $BUILD_OPENSSH ]; then
+	rm -rfv $BUILD_OPENSSH > $LOG_OPENSSH 2>&1
+    fi
+
+    mkdir -pv $BUILD_OPENSSH > $LOG_OPENSSH 2>&1
+
+    cd $BUILD_OPENSSH
+    CC=$CROSS_CC \
+    $SRC_OPENSSH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_OPENSSH 2>&1
+    make -j4 >> $LOG_OPENSSH 2>&1
+    make install >> $LOG_OPENSSH 2>&1
+    cd $TOP
+
+}
+
 initialize
 build_qemu
 build_linux
 prepare_rootfs
 build_busybox
+build_bash
+build_openssl
+build_openssh
