@@ -19,6 +19,7 @@ SRC_BUSYBOX=$SRC/busybox-1.23.1
 SRC_BASH=$SRC/bash-4.3.30
 SRC_OPENSSL=$SRC/openssl-1.0.2
 SRC_OPENSSH=$SRC/openssh-6.7p1
+SRC_ZLIB=$SRC/zlib-1.2.8
 
 QEMU_TARGETS='aarch64-softmmu,arm-softmmu,aarch64-linux-user,arm-linux-user'
 
@@ -30,6 +31,7 @@ CROSS_NM=${TOOLCHAIN}nm
 CROSS_AR=${TOOLCHAIN}ar
 CROSS_RANLIB=${TOOLCHAIN}ranlib
 CROSS_LD=${TOOLCHAIN}ld
+CROSS_STRIP=${TOOLCHAIN}strip
 
 CONFIGS=$TOP/configs/
 
@@ -93,7 +95,7 @@ build_linux()
     is_ok
 
     echo "Build `basename $SRC_LINUX`"
-    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j8 >> $LOG_LINUX 2>&1
+    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make $JOBS >> $LOG_LINUX 2>&1
     is_ok
 
     echo "Install `basename $SRC_LINUX`"
@@ -125,7 +127,7 @@ build_busybox()
     echo "Build `basename $SRC_BUSYBOX`"
     ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make oldconfig >> $LOG_BUSYBOX 2>&1
     is_ok
-    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j4 install >> $LOG_BUSYBOX 2>&1
+    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make $JOBS install >> $LOG_BUSYBOX 2>&1
     is_ok
 
     cp -prv _install/* $ROOTFS/  >> $LOG_BUSYBOX 2>&1
@@ -169,7 +171,7 @@ build_bash()
     is_ok
 
     echo "Build `basename $SRC_BASH`"
-    make -j4 >> $LOG_BASH 2>&1
+    make $JOBS >> $LOG_BASH 2>&1
     is_ok
 
     echo "Install `basename $SRC_BASH`"
@@ -223,15 +225,47 @@ build_openssh()
 
     echo "Configure `basename $SRC_OPENSSH`"
     CC=$CROSS_CC \
-      $SRC_OPENSSH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_OPENSSH 2>&1
+      AR=$CROSS_AR \
+      RANLIB=$CROSS_RANLIB \
+      STRIP=$CROSS_STRIP \
+      $SRC_OPENSSH/configure --prefix=$ROOTFS --host=$TARGET --with-zlib=$ROOTFS --disable-strip >> $LOG_OPENSSH 2>&1
     is_ok
 
     echo "Build `basename $SRC_OPENSSH`"
-    make -j4 >> $LOG_OPENSSH 2>&1
+    make $JOBS >> $LOG_OPENSSH 2>&1
     is_ok
 
     echo "Install `basename $SRC_OPENSSH`"
-    make install >> $LOG_OPENSSH 2>&1
+    make -k install >> $LOG_OPENSSH 2>&1
+
+    cd $TOP
+
+}
+
+build_zlib()
+{
+    BUILD_ZLIB=$BUILD/`basename $SRC_ZLIB`
+    LOG_ZLIB=$LOGS/`basename $SRC_ZLIB`
+    if [ -d $BUILD_ZLIB ]; then
+	rm -rfv $BUILD_ZLIB > $LOG_ZLIB 2>&1
+    fi
+
+    cp -prv $SRC_ZLIB $BUILD/ > $LOG_ZLIB 2>&1
+
+    cd $BUILD_ZLIB
+
+    echo "Configure `basename $SRC_ZLIB`"
+    CC=$CROSS_CC \
+      AR=$CROSS_AR \
+      $SRC_ZLIB/configure --prefix=$ROOTFS >> $LOG_ZLIB 2>&1
+    is_ok
+
+    echo "Build `basename $SRC_ZLIB`"
+    make $JOBS >> $LOG_ZLIB 2>&1
+    is_ok
+
+    echo "Install `basename $SRC_ZLIB`"
+    make install >> $LOG_ZLIB 2>&1
     is_ok
 
     cd $TOP
@@ -244,5 +278,6 @@ build_linux
 prepare_rootfs
 build_busybox
 build_bash
+build_zlib
 build_openssl
 build_openssh
