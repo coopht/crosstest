@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 
 TARGET_ARCH=arm
 TARGET=arm-v7a-linux-gnueabi
@@ -33,6 +33,15 @@ CROSS_LD=${TOOLCHAIN}ld
 
 CONFIGS=$TOP/configs/
 
+is_ok ()
+{
+   if [ $? -ne 0 ]; then
+       echo Failed
+       exit 1
+   fi
+   echo OK
+}
+
 initialize()
 {
     LOG_INIT=$LOGS/init
@@ -50,9 +59,18 @@ build_qemu()
     LOG_QEMU=$LOGS/`basename $SRC_QEMU`
     mkdir -pv $BUILD_QEMU > $LOG_INIT 2>&1
     cd $BUILD_QEMU
+
+    echo "Configure `basename $SRC_QEMU`"
     $SRC_QEMU/configure --prefix=$INSTALL --target-list=$QEMU_TARGETS >> $LOG_QEMU 2>&1
+    is_ok
+
+    echo "Build `basename $SRC_QEMU`"
     make $JOBS >> $LOG_QEMU 2>&1
+    is_ok
+
+    echo "Install `basename $SRC_QEMU`"
     make $JOBS install >> $LOG_QEMU 2>&1
+    is_ok
     cd $TOP
 }
 
@@ -65,15 +83,25 @@ build_linux()
 	rm -rfv $BUILD_LINUX > $LOG_LINUX 2>&1
     fi
 
+    echo "Prepare `basename $SRC_LINUX`"
     cp -prv $SRC_LINUX $BUILD/ > $LOG_LINUX 2>&1
+    is_ok
 
     cd $BUILD_LINUX
+    echo "Configure `basename $SRC_LINUX`"
     cp -v $CONFIGS/.config_working_linux .config >> $LOG_LINUX 2>&1
-    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j8 >> $LOG_LINUX 2>&1
+    is_ok
 
+    echo "Build `basename $SRC_LINUX`"
+    ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j8 >> $LOG_LINUX 2>&1
+    is_ok
+
+    echo "Install `basename $SRC_LINUX`"
     mkdir -pv $INSTALL/linux >> $LOG_LINUX 2>&1
     cp -v ./arch/arm/boot/zImage $INSTALL/linux/ >> $LOG_LINUX 2>&1
     cp -v ./arch/arm/boot/dts/vexpress-v2p-ca15_a7.dtb $INSTALL/linux/ >> $LOG_LINUX 2>&1
+    is_ok
+
     cd $TOP
 }
 
@@ -90,12 +118,18 @@ build_busybox()
 
     cd $BUILD_BUSYBOX
 
+    echo "Configure `basename $SRC_BUSYBOX`"
     cp -v $CONFIGS/.config_working_busybox .config >> $LOG_BUSYBOX 2>&1
+    is_ok
 
+    echo "Build `basename $SRC_BUSYBOX`"
     ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make oldconfig >> $LOG_BUSYBOX 2>&1
+    is_ok
     ARCH=$TARGET_ARCH CROSS_COMPILE=$TOOLCHAIN make -j4 install >> $LOG_BUSYBOX 2>&1
+    is_ok
 
-    cp -prv _install/* $ROOTFS/
+    cp -prv _install/* $ROOTFS/  >> $LOG_BUSYBOX 2>&1
+    is_ok
 
     cd $TOP
 }
@@ -107,9 +141,15 @@ prepare_rootfs()
 	rm -rfv $ROOTFS > $LOG_ROOTFS 2>&1
     fi
 
+    echo "Prepare Rootfs"
     cp -prv $CONFIGS/rootfs.template $ROOTFS > $LOG_ROOTFS 2>&1
+    is_ok
+
     mkdir -pv $ROOTFS/{proc,srv,sys,dev,var} >> $LOG_ROOTFS 2>&1
+    is_ok
+
     install -dv -m 1777 $ROOTFS/tmp $ROOTFS/var/tmp >> $LOG_ROOTFS 2>&1
+    is_ok
 }
 
 build_bash()
@@ -123,10 +163,19 @@ build_bash()
     mkdir -pv $BUILD_BASH > $LOG_BASH 2>&1
 
     cd $BUILD_BASH
+    echo "Configure `basename $SRC_BASH`"
     CC=$CROSS_CC \
-    $SRC_BASH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_BASH 2>&1
+      $SRC_BASH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_BASH 2>&1
+    is_ok
+
+    echo "Build `basename $SRC_BASH`"
     make -j4 >> $LOG_BASH 2>&1
+    is_ok
+
+    echo "Install `basename $SRC_BASH`"
     make install >> $LOG_BASH 2>&1
+    is_ok
+
     cd $TOP
 }
 
@@ -141,11 +190,22 @@ build_openssl()
     cp -prv $SRC_OPENSSL $BUILD/ > $LOG_OPENSSL 2>&1
 
     cd $BUILD_OPENSSL
+
+    echo "Configure `basename $SRC_OPENSSL`"
     CC=$CROSS_CC \
-    RANLIB=$CROSS_RANLIB \
-    $SRC_OPENSSL/Configure linux-armv4 --prefix=$ROOTFS  >> $LOG_OPENSSL 2>&1
-    make -j4 >> $LOG_OPENSSL 2>&1
+      RANLIB=$CROSS_RANLIB \
+      AR=$CROSS_AR \
+      $SRC_OPENSSL/Configure linux-armv4 shared --prefix=$ROOTFS >> $LOG_OPENSSL 2>&1
+    is_ok
+
+    echo "Build `basename $SRC_OPENSSL`"
+    make >> $LOG_OPENSSL 2>&1
+    is_ok
+
+    echo "Install `basename $SRC_OPENSSL`"
     make install >> $LOG_OPENSSL 2>&1
+    is_ok
+
     cd $TOP
 }
 
@@ -160,10 +220,20 @@ build_openssh()
     mkdir -pv $BUILD_OPENSSH > $LOG_OPENSSH 2>&1
 
     cd $BUILD_OPENSSH
+
+    echo "Configure `basename $SRC_OPENSSH`"
     CC=$CROSS_CC \
-    $SRC_OPENSSH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_OPENSSH 2>&1
+      $SRC_OPENSSH/configure --prefix=$ROOTFS --host=$TARGET >> $LOG_OPENSSH 2>&1
+    is_ok
+
+    echo "Build `basename $SRC_OPENSSH`"
     make -j4 >> $LOG_OPENSSH 2>&1
+    is_ok
+
+    echo "Install `basename $SRC_OPENSSH`"
     make install >> $LOG_OPENSSH 2>&1
+    is_ok
+
     cd $TOP
 
 }
