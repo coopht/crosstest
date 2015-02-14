@@ -257,7 +257,7 @@ build_zlib()
     echo "Configure `basename $SRC_ZLIB`"
     CC=$CROSS_CC \
       AR=$CROSS_AR \
-      $SRC_ZLIB/configure --prefix=$ROOTFS >> $LOG_ZLIB 2>&1
+      $SRC_ZLIB/configure --prefix=/usr >> $LOG_ZLIB 2>&1
     is_ok
 
     echo "Build `basename $SRC_ZLIB`"
@@ -265,7 +265,7 @@ build_zlib()
     is_ok
 
     echo "Install `basename $SRC_ZLIB`"
-    make install >> $LOG_ZLIB 2>&1
+    DESTDIR=$ROOTFS/ make install >> $LOG_ZLIB 2>&1
     is_ok
 
     cd $TOP
