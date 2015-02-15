@@ -197,7 +197,7 @@ build_openssl()
     CC=$CROSS_CC \
       RANLIB=$CROSS_RANLIB \
       AR=$CROSS_AR \
-      $SRC_OPENSSL/Configure linux-armv4 shared --prefix=$ROOTFS >> $LOG_OPENSSL 2>&1
+      $SRC_OPENSSL/Configure linux-armv4 shared --prefix=/usr >> $LOG_OPENSSL 2>&1
     is_ok
 
     echo "Build `basename $SRC_OPENSSL`"
@@ -205,7 +205,7 @@ build_openssl()
     is_ok
 
     echo "Install `basename $SRC_OPENSSL`"
-    make install >> $LOG_OPENSSL 2>&1
+    make INSTALL_PREFIX=$ROOTFS install >> $LOG_OPENSSL 2>&1
     is_ok
 
     cd $TOP
@@ -228,7 +228,7 @@ build_openssh()
       AR=$CROSS_AR \
       RANLIB=$CROSS_RANLIB \
       STRIP=$CROSS_STRIP \
-      $SRC_OPENSSH/configure --prefix=$ROOTFS --host=$TARGET --with-zlib=$ROOTFS --disable-strip >> $LOG_OPENSSH 2>&1
+      $SRC_OPENSSH/configure --prefix=/ --sysconfdir=/etc/ssh --exec-prefix=/usr --host=$TARGET --with-zlib=$ROOTFS --disable-strip >> $LOG_OPENSSH 2>&1
     is_ok
 
     echo "Build `basename $SRC_OPENSSH`"
@@ -236,7 +236,7 @@ build_openssh()
     is_ok
 
     echo "Install `basename $SRC_OPENSSH`"
-    make -k install >> $LOG_OPENSSH 2>&1
+    make DESTDIR=$ROOTFS -k install >> $LOG_OPENSSH 2>&1
 
     cd $TOP
 
@@ -257,7 +257,7 @@ build_zlib()
     echo "Configure `basename $SRC_ZLIB`"
     CC=$CROSS_CC \
       AR=$CROSS_AR \
-      $SRC_ZLIB/configure --prefix=/usr >> $LOG_ZLIB 2>&1
+      $SRC_ZLIB/configure --prefix=$ROOTFS >> $LOG_ZLIB 2>&1
     is_ok
 
     echo "Build `basename $SRC_ZLIB`"
@@ -265,7 +265,7 @@ build_zlib()
     is_ok
 
     echo "Install `basename $SRC_ZLIB`"
-    DESTDIR=$ROOTFS/ make install >> $LOG_ZLIB 2>&1
+    make install >> $LOG_ZLIB 2>&1
     is_ok
 
     cd $TOP
