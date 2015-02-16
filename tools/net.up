@@ -1,0 +1,2 @@
+#!/bin/bash
+ifconfig eth0 192.168.1.1 up
