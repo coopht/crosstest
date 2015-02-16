@@ -147,10 +147,16 @@ prepare_rootfs()
     cp -prv $CONFIGS/rootfs.template $ROOTFS > $LOG_ROOTFS 2>&1
     is_ok
 
-    mkdir -pv $ROOTFS/{proc,srv,sys,dev,var} >> $LOG_ROOTFS 2>&1
+    echo "Create directories"
+    mkdir -pv $ROOTFS/{proc,srv,sys,dev,var,root} >> $LOG_ROOTFS 2>&1
     is_ok
 
+    echo "Install directories"
     install -dv -m 1777 $ROOTFS/tmp $ROOTFS/var/tmp >> $LOG_ROOTFS 2>&1
+    is_ok
+
+    echo "Copy system libs"
+    cp -prv `$CROSS_CC -print-sysroot`/lib $ROOTFS/ >> $LOG_ROOTFS 2>&1
     is_ok
 }
 
@@ -228,7 +234,7 @@ build_openssh()
       AR=$CROSS_AR \
       RANLIB=$CROSS_RANLIB \
       STRIP=$CROSS_STRIP \
-      $SRC_OPENSSH/configure --prefix=/ --sysconfdir=/etc/ssh --exec-prefix=/usr --host=$TARGET --with-zlib=$ROOTFS --disable-strip >> $LOG_OPENSSH 2>&1
+      $SRC_OPENSSH/configure --prefix=/ --sysconfdir=/etc/ssh --exec-prefix=/usr --host=$TARGET --with-zlib=$ROOTFS/usr --with-ssl-dir=$ROOTFS/usr --disable-strip >> $LOG_OPENSSH 2>&1
     is_ok
 
     echo "Build `basename $SRC_OPENSSH`"
@@ -257,7 +263,7 @@ build_zlib()
     echo "Configure `basename $SRC_ZLIB`"
     CC=$CROSS_CC \
       AR=$CROSS_AR \
-      $SRC_ZLIB/configure --prefix=$ROOTFS >> $LOG_ZLIB 2>&1
+      $SRC_ZLIB/configure --prefix=$ROOTFS/usr >> $LOG_ZLIB 2>&1
     is_ok
 
     echo "Build `basename $SRC_ZLIB`"
