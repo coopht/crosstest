@@ -63,7 +63,7 @@ build_qemu()
     cd $BUILD_QEMU
 
     echo "Configure `basename $SRC_QEMU`"
-    $SRC_QEMU/configure --prefix=$INSTALL --target-list=$QEMU_TARGETS >> $LOG_QEMU 2>&1
+    $SRC_QEMU/configure --prefix=$INSTALL --python=/usr/bin/python2 --target-list=$QEMU_TARGETS >> $LOG_QEMU 2>&1
     is_ok
 
     echo "Build `basename $SRC_QEMU`"
