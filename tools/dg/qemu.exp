@@ -1,0 +1,9 @@
+set_board_info compiler "arm-v8a57-linux-gnueabi-gcc"
+set_board_info c++compiler "arm-v8a57-linux-gnueabi-g++"
+load_generic_config "unix"
+set_board_info multitop build/gcc/arm-v8a57-linux-gnueabi
+set timeout 300
+set_board_info hostname 192.168.1.2
+set_board_info username root
+set_board_info rsh_prog /usr/bin/ssh
+set_board_info rcp_prog /usr/bin/scp
