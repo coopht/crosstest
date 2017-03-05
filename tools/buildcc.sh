@@ -73,13 +73,10 @@ create_dirs(){
     echo "The build dir:        "$BUILD_DIR
 
     mkdir -p ${SYSROOT}/
+    mkdir -p $SRC_DIR
 
     if ! [ -d "${SYSROOT}/" ]; then
         abort "Error: cannnot create the sysroot dir '$SYSROOT'"
-    fi
-
-    if ! [ -d $SRC_DIR ] ; then
-        abort  "Erorr: SRC_DIR not set"
     fi
 
     if ! [ -d $BUILD_DIR ] ; then
@@ -92,6 +89,65 @@ create_dirs(){
         mkdir -p ${LOG_DIR}
     fi
 }
+
+default_setup_source_gcc() {
+    cd $SRC_DIR
+    git clone git://gcc.gnu.org/git/gcc.git
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+default_setup_source_binutils-gdb() {
+    cd $SRC_DIR
+    git clone git://sourceware.org/git/binutils-gdb.git
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+default_setup_source_glibc() {
+    cd $SRC_DIR
+    git clone git://sourceware.org/git/glibc.git
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+default_setup_source_gmp() {
+    cd $SRC_DIR
+    wget https://gmplib.org/download/gmp/gmp-6.1.2.tar.lz && tar xfv gmp-6.1.2.tar.lz && mv gmp-6.1.2 gmp
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+default_setup_source_linux() {
+    cd $SRC_DIR
+    git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+default_setup_source_mpfr() {
+    cd $SRC_DIR
+    wget http://www.mpfr.org/mpfr-current/mpfr-3.1.5.tar.bz2 && tar xfv mpfr-3.1.5.tar.bz2 && mv mpfr-3.1.5 mpfr
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+default_setup_source_mpc() {
+set +x
+    cd $SRC_DIR
+    git clone https://scm.gforge.inria.fr/anonscm/git/mpc/mpc.git && cd mpc && autoreconf -ifs
+    retval=$?
+    cd $TOP_DIR
+    return $retval
+}
+
+
 # common function to build toolchain components
 # with configure, make, make install.
 #
@@ -101,35 +157,50 @@ create_dirs(){
 
 build () {
 
-    echo "Installing : $1"
     TOOL_NAME=$1
     TOOL_BUILD_DIR=${BUILD_DIR}/${TOOL_NAME}
     LOG=$LOG_DIR/${TOOL_NAME}.log
     TOOL_SRC_DIR=${SRC_DIR}/${TOOL_NAME}
 
+    echo
+    echo "-= [${TOOL_NAME}] =-"
+
     if [ -f $LOG ]; then
         rm $LOG
     fi;
+
+    # check if there is a function to prepare source code for current component
+    if [ ! -d $TOOL_SRC_DIR ]; then
+        echo -n "[${TOOL_NAME}] Setting source code"
+        if [ "$(type -t setup_source_${var})" = function ]; then
+            setup_source_${TOOL_NAME} >> $LOG 2&>1
+            check_success
+        else
+            default_setup_source_${TOOL_NAME} >> $LOG 2&>1
+            check_success
+        fi
+        echo " Done"
+    fi
 
     cd $BUILD_DIR
 
     check_build_dir $TOOL_BUILD_DIR $LOG
 
-    if ! [ -d $TOOL_SRC_DIR ]; then
-        abort "Error: check the $TOOL_SRC_DIR"
-    fi
-
     cd $TOOL_BUILD_DIR
 
+    echo -n "[${TOOL_NAME}] Configure:"
     $TOOL_SRC_DIR/configure $2  >> $LOG 2>&1
     check_success
+    echo " Done"
 
+    echo -n "[${TOOL_NAME}] Build:"
     make ${MAKE_FLAGS} >> $LOG 2>&1
     check_success
+    echo "Done"
 
+    echo -n "[${TOOL_NAME}] Install:"
     make install >> $LOG 2>&1
     check_success
-
     echo "Done"
 
     cd $TOP_DIR
