@@ -161,10 +161,10 @@ build () {
     if [ ! -d $TOOL_SRC_DIR ]; then
         echo -n "[${TOOL_NAME}] Setting source code"
         if [ "$(type -t setup_source_${TOOL_NAME})" = function ]; then
-            setup_source_${TOOL_NAME} >> $LOG 2&>1
+            setup_source_${TOOL_NAME} >> $LOG 2>&1
             check_success
         else
-            default_setup_source_${TOOL_NAME} >> $LOG 2&>1
+            default_setup_source_${TOOL_NAME} >> $LOG 2>&1
             check_success
         fi
         echo " Done"
@@ -274,10 +274,10 @@ install_linux_headers(){
         echo
         echo -n "[linux] Setting source code"
         if [ "$(type -t setup_source_linux)" = function ]; then
-            setup_source_linux >> $LINUX_HEADERS_LOG 2&>1
+            setup_source_linux >> ${LINUX_HEADERS_LOG} 2>&1
             check_success
         else
-            default_setup_source_linux >> $LINUX_HEADERS_LOG 2&>1
+            default_setup_source_linux >> ${LINUX_HEADERS_LOG} 2>&1
             check_success
         fi
         echo " Done"
@@ -290,7 +290,7 @@ install_linux_headers(){
     cp -rf $LINUX_SRC/* $LINUX_HEADERS_BUILD_DIR
     cd $LINUX_HEADERS_BUILD_DIR
 
-    make ARCH=${LINUX_ARCH} CROSS_COMPILE=${CROSS_TOOLS_PREFIX}- INSTALL_HDR_PATH="${SYSROOT}/usr" headers_install > ${LINUX_HEADERS_LOG} 2>&1
+    make ARCH=${LINUX_ARCH} CROSS_COMPILE=${CROSS_TOOLS_PREFIX}- INSTALL_HDR_PATH="${SYSROOT}/usr" headers_install >> ${LINUX_HEADERS_LOG} 2>&1
     check_success
     echo "Done"
     cd $TOP_DIR
