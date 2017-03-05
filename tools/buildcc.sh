@@ -324,14 +324,14 @@ build_glibc(){
 }
 
 build_gcc(){
-    DEBUG_FLAGS="-g3 -ggdb3 -Og -fvar-tracking-assignments -gdwarf-4"
+    #DEBUG_FLAGS="-g3 -ggdb3 -Og -fvar-tracking-assignments -gdwarf-4"
 
-    CFLAGS=${DEBUG_FLAGS} \
-    CXXFLAGS=${DEBUG_FLAGS} \
-    CPPFLAGS=${DEBUG_FLAGS} \
-    CFLAGS_FOR_TARGET=${DEBUG_FLAGS} \
-    CXXFLAGS_FOR_TARGET=${DEBUG_FLAGS} \
-    STAGE1_CXXFLAGS=${DEBUG_FLAGS} \
+#     CFLAGS=${DEBUG_FLAGS} \
+#     CXXFLAGS=${DEBUG_FLAGS} \
+#     CPPFLAGS=${DEBUG_FLAGS} \
+#     CFLAGS_FOR_TARGET=${DEBUG_FLAGS} \
+#     CXXFLAGS_FOR_TARGET=${DEBUG_FLAGS} \
+#     STAGE1_CXXFLAGS=${DEBUG_FLAGS} \
     build gcc "--target=$TARGET \
                --prefix=$PREFIX_CROSS \
                --enable-threads \
