@@ -1,10 +1,6 @@
 #!/bin/bash
 
-MAKE_FLAGS=-j8
-
 TOP_DIR=`pwd`
-
-LC_LANG=C
 
 # Setup directories
 SRC_DIR=${TOP_DIR}/src
@@ -13,14 +9,10 @@ BUILD_DIR=${TOP_DIR}/build
 
 LOG_DIR=${BUILD_DIR}/log
 
-TARGET=arm-v7ar-linux-gnueabi
-
-# The GCC target CPU tunning
-TARGET_ARCH=armv7-a
-TARGET_MODE=arm
-TARGET_FPU=vfpv3
-TARGET_TUNE=cortex-a15
-TARGET_FLOAT=softfp
+if [ -f ${TOP_DIR}/.conf ]
+then
+    . ${TOP_DIR}/.conf
+fi
 
 # define installation prefix
 PREFIX_CROSS=${TOP_DIR}/${TARGET}
@@ -34,11 +26,7 @@ SYSROOT=${PREFIX_CROSS}/${TARGET}/sys-root
 CROSS_TOOLS_PREFIX=${TOOLS_DIR}/${TARGET}
 
 # define kernel version for glibc
-LINUX_VERSION=4.0
 LINUX_SRC=${SRC_DIR}/linux-stable
-
-# define linux target architecture
-LINUX_ARCH=arm
 
 BUILD_DATE=`date +%d-%m-%Y`
 
