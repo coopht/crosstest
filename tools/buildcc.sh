@@ -92,7 +92,7 @@ create_dirs(){
 
 default_setup_source_gcc() {
     cd $SRC_DIR
-    git clone git://gcc.gnu.org/git/gcc.git
+    git clone git://gcc.gnu.org/git/gcc.git && cd gcc && git checkout master
     retval=$?
     cd $TOP_DIR
     return $retval
@@ -172,7 +172,7 @@ build () {
     # check if there is a function to prepare source code for current component
     if [ ! -d $TOOL_SRC_DIR ]; then
         echo -n "[${TOOL_NAME}] Setting source code"
-        if [ "$(type -t setup_source_${var})" = function ]; then
+        if [ "$(type -t setup_source_${TOOL_NAME})" = function ]; then
             setup_source_${TOOL_NAME} >> $LOG 2&>1
             check_success
         else
@@ -276,14 +276,23 @@ build_gcc_stage_1(){
 }
 
 install_linux_headers(){
-    echo "Installing Linux headers"
+    echo "-= [Linux headers] =-"
     cd $BUILD_DIR
 
     # define linux headers log file
     LINUX_HEADERS_LOG=${LOG_DIR}/linux_headers.log
 
     if ! [ -d $LINUX_SRC ] ; then
-        abort "Error: cannot find the kernel source dir '$LINUX_SRC'"
+        echo
+        echo -n "[linux] Setting source code"
+        if [ "$(type -t setup_source_linux)" = function ]; then
+            setup_source_linux >> $LINUX_HEADERS_LOG 2&>1
+            check_success
+        else
+            default_setup_source_linux >> $LINUX_HEADERS_LOG 2&>1
+            check_success
+        fi
+        echo " Done"
     fi
 
     LINUX_HEADERS_BUILD_DIR="$BUILD_DIR/`basename ${LINUX_SRC}`.linux_headers"
